@@ -1,0 +1,187 @@
+TinyBBS Data Format Version 1.0 (HomeServer BBS)
+
+{
+	time_t time;
+	unsigined long int namelen;
+	char name[];
+	unsigned long int contentlen;
+	char content[];
+	unsigned long int agentlen;
+	char agent[];
+}
+
+拡張性に乏しく、文字コードが Shift-JIS であったので改善したもの
+
+New TinyBBS Data File Format 1.1
+{
+	FILETIME ftWritten;
+	DWORD dwBytesOfName;
+	LPSTR szName;
+	DWORD dwBytesOfContent;
+	LPSTR szContent;
+	DWORD dwBytesOfAgent;
+	LPSTR szAgent;
+	DWORD dwRevLen = 0;
+	LPSTR szRsv = {};
+}
+
+ID 発行につき変更されたもの
+
+Upgrade 1.1.1
+
+{
+	FILETIME ftWritten;
+	DWORD dwBytesOfName;
+	LPSTR szName;
+	DWORD dwBytesOfContent;
+	LPSTR szContent;
+	DWORD dwBytesOfAgent;
+	LPSTR szAgent;
+	DWORD dwRevLen = 2;
+	LPSTR szRsv = {
+		WORD Id;
+	};
+}
+
+ID 長変更の将来性と拡張性
+
+Upgrade 1.1.2
+
+{
+	FILETIME ftWritten;
+	DWORD dwBytesOfName;
+	LPSTR szName;
+	DWORD dwBytesOfContent;
+	LPSTR szContent;
+	DWORD dwBytesOfAgent;
+	LPSTR szAgent;
+	DWORD dwRevLen = 11;
+	LPSTR szRsv = {
+		WORD wItemId = 'ID';
+		DWORD dwItemLen = 5;
+		LPSTR szItem;
+	};
+}
+
+MetaID 領域確保
+
+Upgrade 1.1.3
+
+{
+	FILETIME ftWritten;
+	DWORD dwBytesOfName;
+	LPSTR szName;
+	DWORD dwBytesOfContent;
+	LPSTR szContent;
+	DWORD dwBytesOfAgent;
+	LPSTR szAgent;
+	DWORD dwRevLen = 13;
+	LPSTR szRsv = {
+		WORD wItemId = 'ID';
+		DWORD dwItemLen = 7;
+		LPSTR szItem;
+		WORD wMetaID;
+	};
+}
+
+新規練り直し
+タグの命名方法:
+	一文字目が大文字なら必須項目
+	二文字目が大文字なら固定項目(一文字目が大文字である必要がある)
+	三文字目が大文字ならセクション開始点
+	四文字目が大文字なら要素は無視される
+	未知のタグに遭遇した場合は無視する
+タグデータの書き込み:
+	'TNAM' (Len) {
+		TYPE Data1;
+		TYPE Data2;
+	}
+	は以下のように書き込まれる
+	DWORD TagName = 'TNAM';
+	DWORD Length = Len;
+	TYPE Data1;
+	TYPE Data2;
+フラグ:
+	0: URLリンク生成
+	1: 拡張リンク生成
+	2: !SAGE!
+	3: !AA!
+	4:
+	5:
+	6: !KOTEHAN!unei!
+	7: 投稿は削除されました
+データはレスの順に書き込まれているとか限らない。
+例えば削除処理されたレスは最後尾に代替レスを追加する場合がある。
+
+TBDat Format 2.0
+
+'TB'0001h (Len) {	// ファイル宣言 マジックナンバは ((WORD)'TB')
+	'METa' (Len) {	// スレッドの基本情報を記述する
+		'FLen' (8) {
+			DWORD FileLength;	// ファイルの全長
+		}
+		'CRes' (8) {
+			DWORD CountOfRes;	// レスの数
+		}
+		'TItl' (Len) {
+			LPSTR ThreadTitle;	// スレタイ(一行)
+		}
+		'DEsc' (Len) {
+			LPSTR ThreadDescription;	// スレッドの説明(一行)
+		}
+		'TBld' (16) {
+			FILETIME ftBuild;	// スレッドが経った時刻(非ローカル時刻)
+		}
+		'ANnm' (256) {
+			LPSTR AnonymousName = "Anonymous";	// 匿名投稿の名前 デフォルトは Anonymous
+		}
+	}
+	'RES1' (Len) {	// >>1のレスは必ず配置されなければならない
+		'FLag' (8) {
+			DWORD Flags;	// 書き込みに対するフラグ
+		}
+		'Nres' (8) {
+			DWORD NumberOfRes = 1;	// 何番目のレスなのか
+		}
+		'Name' (Len) {
+			LPSTR Name;	// 投稿者のハンドルネーム(長さ0が可能、この場合読み込み側は Anonymous 表示を行わなければならない)
+		}
+		'Cont' (Len) {
+			LPSTR Content;	// 投稿内容(長さ0は不可)
+		}
+		'Agnt' (Len) {
+			LPSTR UserAgent;	// ユーザエージェント情報
+		}
+		'Puid' (8) {
+			LPSTR UserID;	// 表示に利用する七桁のID
+		}
+		'Mtid' (10) {
+			WORD MetaID;	// IP から算出される逆算不可能なID
+			DWORD IP;	// 投稿者のIP情報(非公開)
+		}
+	}
+	'reSn' (Len) {	// >>2以降のレス
+		'FLag' (8) {
+			DWORD Flags;	// 書き込みに対するフラグ
+		}
+		'Nres' (8) {
+			DWORD NumberOfRes = 1;	// 何番目のレスなのか
+		}
+		'Name' (Len) {
+			LPSTR Name;	// 投稿者のハンドルネーム(長さ0が可能、この場合読み込み側は Anonymous 表示を行わなければならない)
+		}
+		'Cont' (Len) {
+			LPSTR Content;	// 投稿内容(長さ0は不可)
+		}
+		'Agnt' (Len) {
+			LPSTR UserAgent;	// ユーザエージェント情報
+		}
+		'Puid' (8) {
+			LPSTR UserID;	// 表示に利用する七桁のID
+		}
+		'Mtid' (10) {
+			WORD MetaID;	// IP から算出される逆算不可能なID
+			DWORD IP;	// 投稿者のIP情報(非公開)
+		}
+	}
+}

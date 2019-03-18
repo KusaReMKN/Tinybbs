@@ -1,0 +1,34 @@
+﻿TinyBBS FileFormat
+
+ファイルは以下のチャンクによって構成される:
+{
+  FILETIME	ftTime;
+  DWORD	dwNameLen;	// 名前の領域の大きさ
+  LPSTR	szName;	// ヌル文字を含まなければならない
+  DWORD	dwContentLen;	// 内容の領域の大きさ
+  LPSTR	szContent;	// ヌル文字を含む
+  DWORD	dwAgentLen;	// ユーザエージェントの領域の大きさ
+  LPSTR	szAgent;	// ヌル文字を
+  DWORD	dwRsvLen;	// (13)拡張領域の大きさの確保の謳ったバージョンタグ
+  {
+    WORD	wIdItemId;	// (0x4449)続く領域がIDであることを宣言
+    DWORD	dsIdItemLen;	// (7)ID領域の大きさ
+    {
+      BYTE	szIdStr[5];	// ヌル文字を含むIDの文字列
+      WORD	wBaseId;	// 発信元に割り当てられる一定のID
+    }
+  }
+}
+
+========================================
+
+TinyBBS リンク生成トリガー
+
+トリガ  対象
+------  --------
+http    後続の 0x20 < c < 0x7fの文字 (http://nico.ms/)
+>>      後続のDEC (>>0) 生成リンクは onclick="GoRes('RES%08lX');"
+sm      後続のDEC (sm9) 生成リンクは http://nico.ms/sm～ target="_blanck"
+tb      後続の LONGLONG HEX (tb0) 生成リンクは ./read.cgi?thread=tb～
+mn      後続の LONGLONG HEX (mn0) 生成リンクは ../bbsimg/mn～.jpg id="～"
+cmd     後続の < から > の文字 (cmd<echo>) 生成リンクは ../cmd/～.html

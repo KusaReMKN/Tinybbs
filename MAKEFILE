@@ -1,0 +1,33 @@
+CC	= WCL386
+CFLAGS	= -cc -Ox -Os -Ol+ -6r -fp6 -zw -bm -zW -fe=$@
+
+ALL:	read.cgi make.cgi write.cgi index.cgi backup.exe wimg.cgi mimg.cgi
+
+clean:
+	del *.exe
+	del *.cgi
+	del *.obj
+
+read.cgi:	read.c
+	$(CC) $(CFLAGS) $<
+
+make.cgi:	MAKE.c
+	$(CC) $(CFLAGS) $<
+
+write.cgi:	WRITE.c
+	$(CC) $(CFLAGS) $<
+
+index.cgi:	INDEX.c
+	$(CC) $(CFLAGS) $<
+
+backup.exe:	BACKUP.c
+	$(CC) $(CFLAGS) $<
+
+wimg.cgi:	wimg.c
+	$(CC) $(CFLAGS) $<
+
+mimg.cgi:	mimg.c
+	$(CC) $(CFLAGS) $<
+
+uneiread.cgi:	uneiread.c
+	$(CC) $(CFLAGS) $<

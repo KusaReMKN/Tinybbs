@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>HOGE</title>
+	<meta name="description" content="画像を適当に軽量化して送信" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body style="text-align: center; word-wrap: break-word; font-size: small;">
+	<h1>画像投稿(Version 2&beta;)</h1>
+	<p>
+		画像を選択して送信可能なサイズに画像を縮小します<Br />
+		縮小処理に時間を要します(30秒ほど)<br />
+		iPhoneだとその場で撮影した画像は横長になります<br />
+	</p>
+	<p style="font-size: xx-small;">
+		画像は縦横比を維持して縮小されて送信されます<br />
+		画質はブラウザに依存するようです<Br />
+		JPEG; MAX File-Size: 36750Bytes.<br />
+	</p>
+	<div class="upload">
+		<input type="file" accept="image/*" id="file" /><br />
+		<hr />
+		<form method="POST" action="./wimg.cgi" onsubmit="return chk();">
+			<fieldset>
+				<legend>画像を軽量化して送信</legend>
+				<input type="hidden" value="" id="result" name="r" required />
+				<input type="submit" />
+			</fieldset>
+		</form> <span id="hogehoge">Select
+			Image</span>
+		<hr />
+	</div>
+	<canvas id="canvas" width="320" height="320">
+	</canvas>
+	<hr />
+	<small>&copy; 2019 KusaReMKN. All rights reserved.</small>
+	<script>
+		var file = document.getElementById('file');
+		var canvas = document.getElementById('canvas');
+		var canvasWidth = 1024;
+		var canvasHeight = 1024;
+		var uploadImgSrc;
+		var dlLink = document.getElementById("result");
+
+		function chk() {
+			if (dlLink.value === "") {
+				alert("画像を選択してください");
+				return false;
+			} else {
+				if (confirm(
+						"この画像，及びこの画像に映っているキャラクターや被写体の等の肖像権を犯していないこと，利用規約に違反していないことを確認してください．\nイラストやキャラクターは著作者により二次配布や二次利用が制限されている場合があります．\n違反された画像が投稿された場合，予告なく削除することがあります．\n詳細はガイドを参照してください．"
+					)) {
+					return confirm("画像を投稿します");
+				}
+			}
+			return false;
+		}
+
+		// Canvasの準備
+		var ctx = canvas.getContext('2d');
+
+		function loadLocalImage(e) {
+			canvasWidth = 2048;
+			canvasHeight = 2048;
+
+			canvas.width = canvasWidth;
+			canvas.height = canvasHeight;
+			dlLink.value = "";
+			document.getElementById("hogehoge").innerText = "Select Image!";
+
+			// ファイル情報を取得
+			var fileData = e.target.files[0];
+			dlLink.value = "";
+
+			// 画像ファイル以外は処理を止める
+			if (!fileData.type.match('image.*')) {
+				document.getElementById("hogehoge").innerText = "This is not Image!";
+
+				return;
+			}
+
+			document.getElementById("hogehoge").innerText = "Wait...";
+
+
+			// FileReaderオブジェクトを使ってファイル読み込み
+			var reader = new FileReader();
+			// ファイル読み込みに成功したときの処理
+			reader.onload = function () {
+				// Canvas上に表示する
+				uploadImgSrc = reader.result;
+				canvasDraw();
+			}
+			// ファイル読み込みを実行
+			reader.readAsDataURL(fileData);
+		}
+
+		// ファイルが指定された時にloadLocalImage()を実行
+		file.addEventListener('change', loadLocalImage, false);
+
+		// Canvas上に画像を表示する
+		function canvasDraw(imgSrc) {
+			// canvas内の要素をクリアする
+			ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+			// Canvas上に画像を表示
+			var img = new Image();
+			img.src = uploadImgSrc;
+
+			img.onload = function () {
+
+				if (!confirm("OrgSize: (" + img.width + ", " + img.height + ")\n軽量化には多少の時間がかかります。\nブラウザの動作が遅くなる場合があります。")) {
+					return false;
+				}
+
+				if (canvasWidth > this.width) {
+					canvasWidth = this.width;
+					canvasHeight = this.height;
+				}
+
+				while (1) {
+					var data;
+
+					canvas.width = canvasWidth;
+					canvas.height = (this.height * canvasWidth) / this.width;
+					ctx.drawImage(img, 0, 0, canvasWidth, (this.height * canvasWidth) / this.width);
+
+					data = canvas.toDataURL("image/jpeg", 0.0);
+					// ダウンロードリンクを生成して出力
+					if (data.length + 2 < 49000) {
+						dlLink.value = data;
+						document.getElementById("hogehoge").innerText = (data.length + 2) + "Bytes; (" + canvas.width + ", " + canvas.height +
+							"); JPEG";
+						break;
+					}
+
+					canvasWidth--;
+				}
+				var majimanji = data.replace("+", "-");
+				while (data !== majimanji) {
+					data = data.replace("+", "-");
+					majimanji = majimanji.replace("+", "-");
+				}
+				majimanji = data.replace("/", "_");
+				while (data !== majimanji) {
+					data = data.replace("/", "_");
+					majimanji = majimanji.replace("/", "_");
+				}
+				majimanji = data.replace("data:image_jpeg;base64,", "");
+				data = majimanji;
+				majimanji = data.replace("data:image_png;base64,", "");
+				data = majimanji;
+				dlLink.value = majimanji;
+			}
+		}
+	</script>
+</body>
+
+</html>
